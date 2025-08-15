@@ -1,0 +1,306 @@
+
+charlie cole <charliepcole@gmail.com>
+8:49 PM (0 minutes ago)
+to me
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Multi-Function Web Calculator</title>
+
+  <!-- Load font faster via <link> instead of @import -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg-color: #1e1e2e;
+      --surface-color: #313244;
+      --text-color: #cdd6f4;
+      --primary-accent: #89b4fa;
+      --secondary-accent: #cba6f7;
+      --error-color: #f38ba8;
+      --success-color: #a6e3a1;
+      --border-color: #585b70;
+      --button-text-color: #11111b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .calculator-container {
+      width: 100%;
+      max-width: 500px;
+      background-color: var(--surface-color);
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1rem;
+    }
+
+    header h1 {
+      color: var(--primary-accent);
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--secondary-accent);
+    }
+
+    select,
+    input[type="text"] {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-color);
+      font-size: 1rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    select:focus,
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary-accent);
+      box-shadow: 0 0 0 3px rgba(137, 180, 250, 0.3);
+    }
+
+    #input-fields {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    button {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--button-text-color);
+      background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(137, 180, 250, 0.25);
+    }
+
+    #results {
+      margin-top: 2rem;
+      padding: 1rem;
+      background-color: var(--bg-color);
+      border-radius: 8px;
+      min-height: 50px;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 500;
+      word-wrap: break-word;
+      border: 1px dashed var(--border-color);
+      transition: all 0.3s;
+    }
+
+    #results.success {
+      color: var(--success-color);
+      border-color: var(--success-color);
+    }
+
+    #results.error {
+      color: var(--error-color);
+      border-color: var(--error-color);
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator-container">
+    <header>
+      <h1>Web Calculator</h1>
+    </header>
+
+    <div class="form-group">
+      <label for="operation-select">Choose a Calculation:</label>
+      <select id="operation-select"></select>
+    </div>
+
+    <div id="input-fields"></div>
+
+    <button id="calculate-btn">Calculate</button>
+
+    <div id="results" aria-live="polite">Your result will appear here.</div>
+  </div>
+
+  <script>
+    const operationSelect = document.getElementById('operation-select');
+    const inputFieldsContainer = document.getElementById('input-fields');
+    const calculateBtn = document.getElementById('calculate-btn');
+    const resultsDiv = document.getElementById('results');
+
+    const operations = {
+      distance: {
+        name: 'Distance Formula',
+        inputs: ['x₁', 'y₁', 'x₂', 'y₂'],
+        calc: ([x1, y1, x2, y2]) =>
+          `Distance: ${Math.hypot(x2 - x1, y2 - y1).toFixed(4)}`
+      },
+      midpoint: {
+        name: 'Midpoint Formula',
+        inputs: ['x₁', 'y₁', 'x₂', 'y₂'],
+        calc: ([x1, y1, x2, y2]) =>
+          `Midpoint: (${(x1 + x2) / 2}, ${(y1 + y2) / 2})`
+      },
+      slope: {
+        name: 'Slope Formula',
+        inputs: ['x₁', 'y₁', 'x₂', 'y₂'],
+        calc: ([x1, y1, x2, y2]) =>
+          x2 - x1 === 0 ? 'Slope is undefined (vertical line)' : `Slope: ${((y2 - y1) / (x2 - x1)).toFixed(4)}`
+      },
+      add: {
+        name: 'Addition',
+        inputs: ['Numbers (comma-separated)'],
+        calc: ([nums]) => `Sum: ${nums.reduce((a, b) => a + b, 0)}`
+      },
+      subtract: {
+        name: 'Subtraction',
+        inputs: ['Numbers (comma-separated)'],
+        calc: ([nums]) => `Result: ${nums.slice(1).reduce((a, b) => a - b, nums[0])}`
+      },
+      multiply: {
+        name: 'Multiplication',
+        inputs: ['Numbers (comma-separated)'],
+        calc: ([nums]) => `Product: ${nums.reduce((a, b) => a * b, 1)}`
+      },
+      divide: {
+        name: 'Division',
+        inputs: ['Numbers (comma-separated)'],
+        calc: ([nums]) => {
+          if (nums.slice(1).some(n => n === 0)) throw new Error('Cannot divide by zero.');
+          return `Quotient: ${nums.slice(1).reduce((a, b) => a / b, nums[0]).toFixed(4)}`;
+        }
+      },
+      power: {
+        name: 'Exponent (Power)',
+        inputs: ['Base', 'Exponent'],
+        calc: ([base, exp]) => `Result: ${Math.pow(base, exp)}`
+      },
+      sqrt: {
+        name: 'Square Root',
+        inputs: ['Number'],
+        calc: ([num]) => {
+          if (num < 0) throw new Error('Cannot get square root of a negative number.');
+          return `Square Root: ${Math.sqrt(num).toFixed(4)}`;
+        }
+      },
+      area_rect: {
+        name: 'Area (Rectangle)',
+        inputs: ['Length', 'Width'],
+        calc: ([l, w]) => `Area: ${l * w}`
+      },
+      area_tri: {
+        name: 'Area (Triangle)',
+        inputs: ['Base', 'Height'],
+        calc: ([b, h]) => `Area: ${0.5 * b * h}`
+      },
+      perimeter: {
+        name: 'Perimeter (4 Sides)',
+        inputs: ['Side 1', 'Side 2', 'Side 3', 'Side 4'],
+        calc: ([s1, s2, s3, s4]) => `Perimeter: ${s1 + s2 + s3 + s4}`
+      }
+    };
+
+    function parseValue(str) {
+      return parseFloat(str.trim());
+    }
+
+    function parseValues(label, val) {
+      return label.includes('comma') ? val.split(',').map(parseValue) : parseValue(val);
+    }
+
+    function updateInputs() {
+      const op = operations[operationSelect.value];
+      inputFieldsContainer.innerHTML = '';
+      op.inputs.forEach((label, i) => {
+        const div = document.createElement('div');
+        div.className = 'input-item';
+        const lbl = document.createElement('label');
+        lbl.textContent = label;
+        lbl.setAttribute('for', `input-${i}`);
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = `input-${i}`;
+        input.placeholder = label;
+        div.append(lbl, input);
+        inputFieldsContainer.appendChild(div);
+      });
+    }
+
+    function showResult(msg, isError = false) {
+      resultsDiv.textContent = msg;
+      resultsDiv.className = isError ? 'error' : 'success';
+    }
+
+    function calculate() {
+      try {
+        const op = operations[operationSelect.value];
+        const values = op.inputs.map((label, i) =>
+          parseValues(label, document.getElementById(`input-${i}`).value)
+        );
+        if (values.flat().some(isNaN)) throw new Error('Invalid input.');
+        const result = op.calc(values);
+        showResult(result);
+      } catch (e) {
+        showResult(`Error: ${e.message}`, true);
+      }
+    }
+
+    // Init
+    Object.entries(operations).forEach(([val, { name }]) => {
+      const opt = document.createElement('option');
+      opt.value = val;
+      opt.textContent = name;
+      operationSelect.appendChild(opt);
+    });
+    operationSelect.addEventListener('change', updateInputs);
+    calculateBtn.addEventListener('click', calculate);
+    updateInputs();
+  </script>
+</body>
+</html>
